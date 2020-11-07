@@ -17,16 +17,19 @@ import com.mysql.cj.jdbc.Driver;
 
 
 
+
 public class AddressBookJDBCService 
 {    public static List<ContactDetails> listOfContactDetails = new ArrayList<ContactDetails>();
 	public static final Logger log = LogManager.getLogger(AddressBookJDBCService.class);
 	public Connection connection;
 	public ResultSet resultSetOpted;
 	public Statement statementOpted;
-	
+	public static AddressBookJDBCService newAddressBookJDBCDatabase=new AddressBookJDBCService();
 	public static void main(String[] args) throws AddressBookException, SQLException {
-		AddressBookJDBCService newAddressBookJDBCDatabase=new AddressBookJDBCService();
+		
 		listOfContactDetails=newAddressBookJDBCDatabase.readContactList();
+		newAddressBookJDBCDatabase.updateAddressBookDetails("Munna", "Kumar",  "Mithapur", "Gaya", "Bihar",120012);
+		newAddressBookJDBCDatabase.readContactsDetails("Shravan","Kumar");
 	}
 	
 	public Connection connectingToDatabase() throws AddressBookException {
@@ -88,5 +91,46 @@ private List<ContactDetails> readContactList() throws AddressBookException, SQLE
 			connection.close();
 	}
 }
+public void updateAddressBookDetails(String firstName, String lastName, String address, String city, String state,int zip) throws AddressBookException, SQLException {
+	
+	String query=String.format("select ID from  contact FIRST_NAME='%s' and LAST_NAME='%s'", firstName,lastName) ;
+	try {
+		connection=this.connectingToDatabase();
+		connection.setAutoCommit(false);
+		statementOpted=connection.createStatement();
+		resultSetOpted=statementOpted.executeQuery(query);
+		Integer contactId = resultSetOpted.getInt("ID");
+		String updateQuery = String.format("update address set ADDRESS_ID ='%s',CITY ='%s', STATE='%s', ZIP=%s where ID=%s;",
+				address, city, state, zip, contactId);
+		
+		statementOpted=connection.createStatement();
+		statementOpted.executeQuery(updateQuery);
+		
+		connection.commit();
+	}catch (SQLException e) {
+		connection.rollback();
+		throw new AddressBookException("Updation Failed.");
+	}finally {
+		if (connection != null)
+			connection.close();
+	}
+}
+
+public void readContactsDetails(String firstName, String lastName) throws AddressBookException, SQLException {
+	String query = String.format("select * from contact join address on contact.ID =address.ADDRESS_ID  where FIRST_NAME='%s' and LAST_NAME='%s'",firstName, lastName);
+	try {
+		connection=this.connectingToDatabase();
+		
+		statementOpted=connection.createStatement();
+		resultSetOpted=statementOpted.executeQuery(query);
+		readContactList();
+	} catch (SQLException e) {
+		throw new AddressBookException("Retrieve Error");
+	}finally {
+		if (connection != null)
+			connection.close();
+	}
+}
 
 }
+

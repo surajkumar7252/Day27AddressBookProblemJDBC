@@ -117,4 +117,12 @@ class ContactDetails{
 	public void setEmailId(String emailId) {
 		this.emailId = emailId;
 	}
+	
+	
+	public boolean equals(Object obj) {
+		ContactDetails givenContact = (ContactDetails) obj;
+		return (givenContact.getFirstName().equals(this.firstName))&& (givenContact.getLastName().equals(this.lastName))
+				&& (givenContact.getAddress().equals(this.address)) && (givenContact.getCity().equals(this.city))
+				&& (givenContact.getState().equals(this.state)) && (givenContact.getZip() == this.zip);
+	}
 }
