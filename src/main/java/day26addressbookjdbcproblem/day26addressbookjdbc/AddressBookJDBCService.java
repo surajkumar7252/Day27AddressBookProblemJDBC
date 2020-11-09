@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -30,6 +31,8 @@ public class AddressBookJDBCService
 		listOfContactDetails=newAddressBookJDBCDatabase.readContactList();
 		newAddressBookJDBCDatabase.updateAddressBookDetails("Munna", "Kumar",  "Mithapur", "Gaya", "Bihar",120012);
 		newAddressBookJDBCDatabase.readContactsDetails("Shravan","Kumar");
+		LocalDate startDate=LocalDate.of(2017, 1, 13);
+		newAddressBookJDBCDatabase.readContactsDetailsInParticularDuration(startDate, LocalDate.now());
 	}
 	
 	public Connection connectingToDatabase() throws AddressBookException {
@@ -131,6 +134,36 @@ public void readContactsDetails(String firstName, String lastName) throws Addres
 			connection.close();
 	}
 }
+
+public void readContactsDetailsInParticularDuration(LocalDate startDate, LocalDate endDate) throws AddressBookException, SQLException {
+	String queryToAddField="alter table contact add DATE_ADDED date  after TYPE";
+	String query = String.format("select * from contact join address on contact.ID =address.ADDRESS_ID  where START between cast('%s' as date) and cast('%s' as date));",startDate, endDate);
+	try {
+		connection=this.connectingToDatabase();
+		Statement addField=connection.createStatement();
+		addField.executeQuery(queryToAddField);
+		statementOpted=connection.createStatement();
+		resultSetOpted=statementOpted.executeQuery(query);
+		while (resultSetOpted.next()) {
+			String firstName = resultSetOpted.getString("FIRST_NAME ");
+			String lastName = resultSetOpted.getString("LAST_NAME ");
+			String address = resultSetOpted.getString("ADDRESS_ID ");
+			String city=resultSetOpted.getString("CITY ");
+			String state=resultSetOpted.getString("STATE ");
+			int zip=resultSetOpted.getInt("ZIP ");
+			log.info("First Name: "+ firstName+" Last Name: "+ lastName +" Address : "+ address+" City : "+city+"State :"+state+" Zip : "+zip);
+			
+		}
+		
+	} catch (SQLException e) {
+		throw new AddressBookException("Retrieve Error");
+	}finally {
+		if (connection != null)
+			connection.close();
+	}
+}
+
+
 
 }
 
