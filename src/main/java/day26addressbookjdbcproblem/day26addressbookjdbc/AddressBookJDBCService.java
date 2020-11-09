@@ -15,6 +15,8 @@ import org.apache.logging.log4j.Logger;
 
 import com.mysql.cj.jdbc.Driver;
 
+import jdk.internal.org.jline.utils.Log;
+
 
 
 
@@ -33,6 +35,8 @@ public class AddressBookJDBCService
 		newAddressBookJDBCDatabase.readContactsDetails("Shravan","Kumar");
 		LocalDate startDate=LocalDate.of(2017, 1, 13);
 		newAddressBookJDBCDatabase.readContactsDetailsInParticularDuration(startDate, LocalDate.now());
+		log.info(" Enter the input in the format (c/s,Name_Of_City_or_State) where c=city and s=state.");
+		newAddressBookJDBCDatabase.readContactsDetailsCountByCityOrState('c',"Gaya");
 	}
 	
 	public Connection connectingToDatabase() throws AddressBookException {
@@ -154,6 +158,29 @@ public void readContactsDetailsInParticularDuration(LocalDate startDate, LocalDa
 			log.info("First Name: "+ firstName+" Last Name: "+ lastName +" Address : "+ address+" City : "+city+"State :"+state+" Zip : "+zip);
 			
 		}
+		
+	} catch (SQLException e) {
+		throw new AddressBookException("Retrieve Error");
+	}finally {
+		if (connection != null)
+			connection.close();
+	}
+}
+
+public void readContactsDetailsCountByCityOrState(char option, String parameter_Name_Feed) throws AddressBookException, SQLException {
+	String query=null;
+	switch(option) {
+	case 'c':query=String.format("select count(CITY) from address join contact on address.ADDRESS_ID=contact.ID where CITY='%s' ",parameter_Name_Feed);
+	         break;
+	case 's':query=String.format("select count(STATE) from address join contact on address.ADDRESS_ID=contact.ID where STATE='%s' ",parameter_Name_Feed);
+             break;
+	
+	}
+	try {
+		connection=this.connectingToDatabase();
+		statementOpted=connection.createStatement();
+		resultSetOpted=statementOpted.executeQuery(query);
+		Log.info("Count as per your search is "+ resultSetOpted.getInt(1));
 		
 	} catch (SQLException e) {
 		throw new AddressBookException("Retrieve Error");
