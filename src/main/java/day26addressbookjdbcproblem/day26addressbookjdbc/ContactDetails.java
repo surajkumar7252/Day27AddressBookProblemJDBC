@@ -6,6 +6,7 @@ class ContactDetails{
 	public String address;
 	public String city;
 	public String state;
+	public String type;
 	public int zip;
 	public String phoneNum;
 	public String emailId;
@@ -34,6 +35,20 @@ class ContactDetails{
 		this.city=city;
 		this.state=state;
 		this.zip=zip;
+	}
+
+
+
+
+	public ContactDetails(String firstName, String lastName, String address, String type, String city,
+			String state, Integer zipCode) {
+		this.firstName=firstName;
+		this.lastName=lastName;
+		this.address=address;
+		this.city=city;
+		this.state=state;
+		this.zip=zip;
+		this.type=type;
 	}
 
 

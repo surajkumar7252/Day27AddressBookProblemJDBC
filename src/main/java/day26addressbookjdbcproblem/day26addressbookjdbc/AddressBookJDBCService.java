@@ -37,6 +37,7 @@ public class AddressBookJDBCService
 		newAddressBookJDBCDatabase.readContactsDetailsInParticularDuration(startDate, LocalDate.now());
 		log.info(" Enter the input in the format (c/s,Name_Of_City_or_State) where c=city and s=state.");
 		newAddressBookJDBCDatabase.readContactsDetailsCountByCityOrState('c',"Gaya");
+		newAddressBookJDBCDatabase.addContactToDB("Shubham", "Kumar", "CS-1,Hirapur","Friend", "Dhanbad", "Jharkhand",164512);
 	}
 	
 	public Connection connectingToDatabase() throws AddressBookException {
@@ -190,7 +191,31 @@ public void readContactsDetailsCountByCityOrState(char option, String parameter_
 	}
 }
 
-
+public void addContactToDB(String firstName,String lastName,String address,String type, String city, String state,Integer zipCode) throws AddressBookException, SQLException {
+    	     ContactDetails contactDetails;
+    	 String query1 = String.format("insert into contact (FIRST_NAME,LAST_NAME,TYPE) values ('%s','%s','%s')",firstName, lastName,type);
+		try {
+			connection.setAutoCommit(false);
+			connection=this.connectingToDatabase();
+			Statement statement1=connection.createStatement();
+			ResultSet resultSet1=statement1.executeQuery(query1);
+			Integer id=resultSet1.getInt("ID");
+			
+			String query2=String.format("insert into address (ADDRESS_ID,ADDRESS,CITY,STATE,ZIP) values ('%s','%s','%s',%s')",id, address,city,state,zipCode);
+			Statement statement2=connection.createStatement();
+			statement2.executeQuery(query2);
+			contactDetails = new ContactDetails( firstName,lastName, address,type,  city, state, zipCode);
+			connection.commit();
+			
+				} catch (SQLException e) {
+					connection.rollback();
+					throw new AddressBookException("Adding Details Failed");
+		}
+		finally {
+			if (connection != null)
+				connection.close();
+		}
+	}
 
 }
 
