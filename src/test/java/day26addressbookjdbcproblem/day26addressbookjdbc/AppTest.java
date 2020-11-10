@@ -36,7 +36,7 @@ public class AppTest
 	}
     
     @Test
-	public void givenContactDetailsWhenSearchedOnDateAddedShouldMatchCount() throws SQLException {
+	public void contactDetailsWhenSearchedInBetweenDates_shouldReturnFirstNameOfTheMatchingPerson() throws SQLException {
 		try {
 			
 			LocalDate startDate=LocalDate.of(2017, 1, 13);
