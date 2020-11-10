@@ -22,7 +22,7 @@ public class AppTest
 	}
     
     @Test
-	public void updatingContactDetails() throws SQLException {
+	public void updatingContactDetails_shouldMatchWithTheResuts() throws SQLException {
 		
 		try {
 			
