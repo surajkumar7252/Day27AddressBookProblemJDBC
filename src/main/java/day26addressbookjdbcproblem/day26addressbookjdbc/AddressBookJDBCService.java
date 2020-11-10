@@ -95,7 +95,7 @@ private List<ContactDetails> readContactList() throws AddressBookException, SQLE
 	}
 }
 public void updateAddressBookDetails(String firstName, String lastName, String address, String city, String state,int zip) throws AddressBookException, SQLException {
-	
+		resultSetOpted=null;
 	String query=String.format("select ID from  contact FIRST_NAME='%s' and LAST_NAME='%s'", firstName,lastName) ;
 	try {
 		connection=this.connectingToDatabase();
@@ -120,6 +120,7 @@ public void updateAddressBookDetails(String firstName, String lastName, String a
 }
 
 public void readContactsDetails(String firstName, String lastName) throws AddressBookException, SQLException {
+		resultSetOpted=null;
 	String query = String.format("select * from contact join address on contact.ID =address.ADDRESS_ID  where FIRST_NAME='%s' and LAST_NAME='%s'",firstName, lastName);
 	try {
 		connection=this.connectingToDatabase();
@@ -136,6 +137,7 @@ public void readContactsDetails(String firstName, String lastName) throws Addres
 }
 
 public void readContactsDetailsInParticularDuration(LocalDate startDate, LocalDate endDate) throws AddressBookException, SQLException {
+		resultSetOpted=null;
 	String queryToAddField="alter table contact add DATE_ADDED date  after TYPE";
 	String query = String.format("select * from contact join address on contact.ID =address.ADDRESS_ID  where START between cast('%s' as date) and cast('%s' as date));",startDate, endDate);
 	try {
