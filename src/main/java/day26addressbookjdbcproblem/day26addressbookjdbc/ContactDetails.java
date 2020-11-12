@@ -1,5 +1,7 @@
 package day26addressbookjdbcproblem.day26addressbookjdbc;
 
+import java.util.Objects;
+
 class ContactDetails{
 	public String firstName;
 	public String lastName;
@@ -51,7 +53,10 @@ class ContactDetails{
 		this.type=type;
 	}
 
-
+	@Override
+	public int hashCode() {
+		return Objects.hash(firstName,lastName,address,type,city,state,zip);
+	}
 
 
 	public String getFirstName() {

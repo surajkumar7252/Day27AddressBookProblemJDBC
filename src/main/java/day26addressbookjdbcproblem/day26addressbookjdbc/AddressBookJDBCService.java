@@ -8,7 +8,9 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,7 +24,8 @@ import jdk.internal.org.jline.utils.Log;
 
 
 public class AddressBookJDBCService 
-{    public static List<ContactDetails> listOfContactDetails = new ArrayList<ContactDetails>();
+{   public static List<ContactDetails> listOfContactDetails = new ArrayList<ContactDetails>();
+    public static List<ContactDetails> listForAddingDetailsUsingThread = new ArrayList<ContactDetails>();
 	public static final Logger log = LogManager.getLogger(AddressBookJDBCService.class);
 	public Connection connection;
 	public ResultSet resultSetOpted;
@@ -31,20 +34,22 @@ public class AddressBookJDBCService
 	public static void main(String[] args) throws AddressBookException, SQLException {
 		
 		listOfContactDetails=newAddressBookJDBCDatabase.readContactList();
+		newAddressBookJDBCDatabase.addContactToDB("Shubham", "Kumar", "CS-1,Hirapur","Friend", "Dhanbad", "Jharkhand",164512);
+	
 		newAddressBookJDBCDatabase.updateAddressBookDetails("Munna", "Kumar",  "Mithapur", "Gaya", "Bihar",120012);
 		newAddressBookJDBCDatabase.readContactsDetails("Shravan","Kumar");
 		LocalDate startDate=LocalDate.of(2017, 1, 13);
 		newAddressBookJDBCDatabase.readContactsDetailsInParticularDuration(startDate, LocalDate.now());
 		log.info(" Enter the input in the format (c/s,Name_Of_City_or_State) where c=city and s=state.");
 		newAddressBookJDBCDatabase.readContactsDetailsCountByCityOrState('c',"Gaya");
-		newAddressBookJDBCDatabase.addContactToDB("Shubham", "Kumar", "CS-1,Hirapur","Friend", "Dhanbad", "Jharkhand",164512);
+		newAddressBookJDBCDatabase.addingMultipleDataUsingThread(listForAddingDetailsUsingThread);
 	}
 	
-	public Connection connectingToDatabase() throws AddressBookException {
+	public synchronized  Connection connectingToDatabase() throws AddressBookException {
 
 		String jdbcurl = "jdbc:mysql://127.0.0.1:3306/addressbook_service?useSSL=false";
 		String userName = "root";
-		String password = "HeyBro@1234";
+		String password = "Star@9835";
 		Connection connection;
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");
@@ -75,13 +80,15 @@ public class AddressBookJDBCService
 		
 	}
 
-private List<ContactDetails> readContactList() throws AddressBookException, SQLException {
+public List<ContactDetails> readContactList() throws AddressBookException, SQLException {
 	List<ContactDetails> contactDetailsList = new ArrayList<ContactDetails>();
 	String query="select * from address inner join contact on address.ADDRESS_ID=contact.ID where CITY='Dhanbad' ";
 	try {
 		connection=this.connectingToDatabase();
+		
 		statementOpted=connection.createStatement();
 		resultSetOpted=statementOpted.executeQuery(query);
+		
 		while (resultSetOpted.next()) {
 			String firstName = resultSetOpted.getString("FIRST_NAME ");
 			String lastName = resultSetOpted.getString("LAST_NAME ");
@@ -100,7 +107,7 @@ private List<ContactDetails> readContactList() throws AddressBookException, SQLE
 	}
 }
 public void updateAddressBookDetails(String firstName, String lastName, String address, String city, String state,int zip) throws AddressBookException, SQLException {
-	
+	resultSetOpted=null;
 	String query=String.format("select ID from  contact FIRST_NAME='%s' and LAST_NAME='%s'", firstName,lastName) ;
 	try {
 		connection=this.connectingToDatabase();
@@ -125,6 +132,7 @@ public void updateAddressBookDetails(String firstName, String lastName, String a
 }
 
 public void readContactsDetails(String firstName, String lastName) throws AddressBookException, SQLException {
+	resultSetOpted=null;
 	String query = String.format("select * from contact join address on contact.ID =address.ADDRESS_ID  where FIRST_NAME='%s' and LAST_NAME='%s'",firstName, lastName);
 	try {
 		connection=this.connectingToDatabase();
@@ -141,6 +149,7 @@ public void readContactsDetails(String firstName, String lastName) throws Addres
 }
 
 public void readContactsDetailsInParticularDuration(LocalDate startDate, LocalDate endDate) throws AddressBookException, SQLException {
+	resultSetOpted=null;
 	String queryToAddField="alter table contact add DATE_ADDED date  after TYPE";
 	String query = String.format("select * from contact join address on contact.ID =address.ADDRESS_ID  where START between cast('%s' as date) and cast('%s' as date));",startDate, endDate);
 	try {
@@ -170,6 +179,7 @@ public void readContactsDetailsInParticularDuration(LocalDate startDate, LocalDa
 
 public void readContactsDetailsCountByCityOrState(char option, String parameter_Name_Feed) throws AddressBookException, SQLException {
 	String query=null;
+	resultSetOpted=null;
 	switch(option) {
 	case 'c':query=String.format("select count(CITY) from address join contact on address.ADDRESS_ID=contact.ID where CITY='%s' ",parameter_Name_Feed);
 	         break;
@@ -193,13 +203,15 @@ public void readContactsDetailsCountByCityOrState(char option, String parameter_
 
 public void addContactToDB(String firstName,String lastName,String address,String type, String city, String state,Integer zipCode) throws AddressBookException, SQLException {
     	     ContactDetails contactDetails;
+    	     resultSetOpted=null;
     	 String query1 = String.format("insert into contact (FIRST_NAME,LAST_NAME,TYPE) values ('%s','%s','%s')",firstName, lastName,type);
 		try {
 			connection.setAutoCommit(false);
 			connection=this.connectingToDatabase();
 			Statement statement1=connection.createStatement();
-			ResultSet resultSet1=statement1.executeQuery(query1);
-			Integer id=resultSet1.getInt("ID");
+			resultSetOpted=statement1.executeQuery(query1);
+			Integer id=resultSetOpted.getInt("ID");
+			
 			
 			String query2=String.format("insert into address (ADDRESS_ID,ADDRESS,CITY,STATE,ZIP) values ('%s','%s','%s',%s')",id, address,city,state,zipCode);
 			Statement statement2=connection.createStatement();
@@ -216,6 +228,33 @@ public void addContactToDB(String firstName,String lastName,String address,Strin
 				connection.close();
 		}
 	}
+
+public void addingMultipleDataUsingThread(List<ContactDetails> contactListToBeAdded) throws AddressBookException, SQLException {
+    Map<Integer,Boolean> addressDetailsAddition=new HashMap<Integer,Boolean>();
+    contactListToBeAdded.forEach(contactDetails ->{
+  		 Runnable task=()->{
+  			addressDetailsAddition.put(contactDetails.hashCode(),false); 
+              log.info("Details Being Added: "+Thread.currentThread().getName()); 
+               try {
+					this.addContactToDB(contactDetails.firstName,contactDetails.lastName,contactDetails.address,contactDetails.type,contactDetails.city,contactDetails.state,contactDetails.zip);
+				} catch (AddressBookException | SQLException e) {
+					
+					e.printStackTrace();
+				}
+               addressDetailsAddition.put(contactDetails.hashCode(),true); 
+  		     log.info("Address Book Updated : "+Thread.currentThread().getName());
+  		 };
+  		 Thread thread=new  Thread(task,contactDetails.firstName);
+  	     thread.start();
+  	 });
+  	 while(addressDetailsAddition.containsValue(false)) {
+  		 try {
+  			 Thread.sleep(1000);
+  		 }catch(InterruptedException e) {
+  			 e.printStackTrace();
+  		 }
+  	 }
+     }
 
 }
 
