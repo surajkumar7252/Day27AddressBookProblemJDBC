@@ -257,4 +257,3 @@ public void addingMultipleDataUsingThread(List<ContactDetails> contactListToBeAd
      }
 
 }
-
