@@ -31,6 +31,15 @@ public class AddressBookJDBCService
 	public ResultSet resultSetOpted;
 	public Statement statementOpted;
 	public static AddressBookJDBCService newAddressBookJDBCDatabase=new AddressBookJDBCService();
+	public AddressBookJDBCService(List<ContactDetails> listOfContactDetails) {
+		
+		this.listOfContactDetails=new ArrayList<>(listOfContactDetails);
+	}
+
+	public AddressBookJDBCService() {
+		listOfContactDetails = new ArrayList<ContactDetails>();
+	}
+
 	public static void main(String[] args) throws AddressBookException, SQLException {
 		
 		listOfContactDetails=newAddressBookJDBCDatabase.readContactList();
@@ -255,5 +264,10 @@ public void addingMultipleDataUsingThread(List<ContactDetails> contactListToBeAd
   		 }
   	 }
      }
+
+public void addNewContactToJsonServerUsingRestAPI(ContactDetails contactDetails) throws AddressBookException, SQLException {
+	this.addContactToDB(contactDetails.firstName,contactDetails.lastName,contactDetails.address,contactDetails.type,contactDetails.city, contactDetails.state,contactDetails.zip);
+	
+}
 
 }
